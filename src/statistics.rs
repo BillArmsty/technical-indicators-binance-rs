@@ -49,28 +49,75 @@ pub fn moving_average_convergence_divergence(
     data_set: &Vec<f64>,
     fast_length: usize,
     slow_length: usize,
-    signal_length: usize,
+    signal_length: usize
 ) -> Option<MACD> {
     let fast_ema_result = exponential_moving_average(data_set, fast_length);
     let slow_ema_result = exponential_moving_average(data_set, slow_length);
 
     let (fast_ema, slow_ema) = match (fast_ema_result, slow_ema_result) {
         (Some(fast_ema), Some(slow_ema)) => (fast_ema, slow_ema),
-        _ => return None,
+        _ => {
+            return None;
+        }
     };
 
     let mut macd: Vec<f64> = Vec::new();
     for i in 0..slow_ema.len() {
-        let macd_val = fast_ema[(fast_ema.len() - slow_ema.len()) + i] - slow_ema[i];
+        let macd_val = fast_ema[fast_ema.len() - slow_ema.len() + i] - slow_ema[i];
         macd.push(macd_val);
     }
 
     let signal_result = exponential_moving_average(&macd, signal_length);
     let signal = match signal_result {
         Some(signal) => signal,
-        _ => return None,
-    
+        _ => {
+            return None;
+        }
     };
 
     Some(MACD { macd, signal })
+}
+
+#[derive(PartialEq, Debug)]
+pub struct BollingerBands {
+    pub upper_bound: Vec<f64>,
+    pub middle_bound: Vec<f64>,
+    pub lower_bound: Vec<f64>,
+}
+
+pub fn bollinger_bands(
+    data_set: &Vec<f64>,
+    window_size: usize,
+    multiplier: f64
+) -> Option<BollingerBands> {
+    let middle_bound_result = simple_moving_average(data_set, window_size);
+    let middle_bound = match middle_bound_result {
+        Some(middle_bound) => middle_bound,
+        _ => {
+            return None;
+        }
+    };
+
+    let mut upper_bound: Vec<f64> = Vec::new();
+    let mut lower_bound: Vec<f64> = Vec::new();
+
+    for i in 0..middle_bound.len() {
+        let slice = &data_set[i..i + window_size];
+        let variance = slice.iter().map(|value| {
+            let diff = middle_bound[i] - (*value as f64);
+            diff * diff
+        })
+        .sum::<f64>() / (window_size as f64);
+
+        let standard_deviation = variance.sqrt();
+
+        upper_bound.push(middle_bound[i] + multiplier * standard_deviation);
+        lower_bound.push(middle_bound[i] - multiplier * standard_deviation);
+    }
+
+    Some(BollingerBands {
+        upper_bound,
+        middle_bound,
+        lower_bound,
+    })
 }
