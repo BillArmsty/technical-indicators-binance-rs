@@ -61,8 +61,18 @@ async fn main() {
 
     let boll_data = match result {
         Some(data) => data,
-        _ => { panic!("Failed Calculate Bollinger Bands") }
+        _ => { panic!("Failed to calculate Bollinger Bands") }
     };
 
     println!("Bollinger Bands: {:?}", boll_data);
+
+    let result = statistics::relative_strength_index(&price_data, 14);
+
+    let rsi_data = match result {
+        Some(data) => data,
+        _ => panic!("Failed to calculate Relative Strength Index"),
+    };
+
+    println!("RSI: {:?}", rsi_data );
 }
+
