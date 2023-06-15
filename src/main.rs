@@ -32,4 +32,12 @@ async fn main() {
         _ => { panic!("Failed to get SMA data") }
     };
     println!("SMAs: {:?}", sma_data);
+
+    let result = statistics::exponential_moving_average(&price_data, 26);
+
+    let ema_data = match result {
+        Some(data) => data,
+        _ => { panic!("Failed Calculate EMA") }
+    };
+    println!("EMAs: {:?}", ema_data);
 }
